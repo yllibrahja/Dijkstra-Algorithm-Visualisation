@@ -1,5 +1,8 @@
 # Dijkstra's Algorithm - Interactive Visualization
 
+[![Live Demo](https://img.shields.io/badge/demo-live-green)](https://YOUR_USERNAME.github.io/dijkstra-visualization/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 An interactive, kid-friendly visualization of Dijkstra's shortest path algorithm. Learn how computers find the fastest route between two points.
 
 ## About
