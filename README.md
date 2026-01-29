@@ -48,7 +48,7 @@ Open your browser and navigate to `http://localhost:5173`
 ```
 dijkstra-visualization/
 ├── src/
-│   ├── DijkstraEnhanced.jsx
+│   ├── DijkstraAlgorithm.jsx
 │   ├── main.jsx
 │   └── index.css
 ├── index.html
