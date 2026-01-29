@@ -81,6 +81,11 @@ export default function DijkstraEnhanced() {
   const [pathEdges, setPathEdges] = useState([]);
   const [interactiveHint, setInteractiveHint] = useState('');
   const [waitingForClick, setWaitingForClick] = useState(false);
+  const [interactiveScore, setInteractiveScore] = useState(0);
+  const [interactiveTaskDescription, setInteractiveTaskDescription] = useState('');
+  const [pulsingTarget, setPulsingTarget] = useState(null);
+  const [pulsingEdge, setPulsingEdge] = useState(null);
+  const [showCompleteButton, setShowCompleteButton] = useState(false);
   
   const sounds = useSound();
 
@@ -162,7 +167,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0 },
       highlighting: [],
       pathEdges: [],
-      interactiveTarget: null,
+      interactiveAction: { type: 'node', target: 'home', hint: 'Click on Home to start our journey!', taskDescription: 'Find where we start' },
       calculation: {
         title: "What are we doing?",
         steps: [
@@ -191,7 +196,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: '?', shop: '?', school: '?' },
       highlighting: [],
       pathEdges: [],
-      interactiveTarget: 'home',
+      interactiveAction: { type: 'edge', target: ['home', 'park'], hint: 'Click the path from Home to Park to explore it!', taskDescription: 'Explore the path to Park' },
       calculation: {
         title: "Setting up our distance table",
         steps: [
@@ -221,7 +226,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: 2, shop: 5, school: '?' },
       highlighting: ['park', 'shop'],
       pathEdges: [['home', 'park'], ['home', 'shop']],
-      interactiveTarget: null,
+      interactiveAction: { type: 'node', target: 'park', hint: 'Park is only 2 blocks away! Click on Park - it\'s the closest!', taskDescription: 'Choose the closest unvisited place' },
       calculation: {
         title: "Calculating distances from Home",
         steps: [
@@ -251,7 +256,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: 2, shop: 5, school: '?' },
       highlighting: ['park'],
       pathEdges: [['home', 'park']],
-      interactiveTarget: 'park',
+      interactiveAction: { type: 'edge', target: ['park', 'school'], hint: 'Now explore from Park! Click the path to School.', taskDescription: 'Explore the path from Park' },
       calculation: {
         title: "Choosing the next location",
         steps: [
@@ -282,7 +287,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: 2, shop: 5, school: 5 },
       highlighting: ['school'],
       pathEdges: [['home', 'park'], ['park', 'school']],
-      interactiveTarget: null,
+      interactiveAction: { type: 'node', target: 'school', hint: 'School is 5 blocks (same as Shop). Click School - it\'s our destination!', taskDescription: 'Choose our destination' },
       calculation: {
         title: "Calculating distance to School via Park",
         steps: [
@@ -314,7 +319,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: 2, shop: 5, school: 5 },
       highlighting: ['shop', 'school'],
       pathEdges: [['home', 'park'], ['park', 'school']],
-      interactiveTarget: 'school',
+      interactiveAction: { type: 'node', target: 'school', hint: 'Click School to visit it and complete the journey!', taskDescription: 'Visit the destination' },
       showComparison: true,
       calculation: {
         title: "Which unvisited place is closest?",
@@ -346,7 +351,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: 2, shop: 5, school: 5 },
       highlighting: ['school'],
       pathEdges: [['home', 'park'], ['park', 'school']],
-      interactiveTarget: null,
+      interactiveAction: { type: 'button', hint: 'Click "Complete" to finish!', taskDescription: 'Finish the algorithm' },
       calculation: {
         title: "Reached the destination!",
         steps: [
@@ -378,7 +383,7 @@ export default function DijkstraEnhanced() {
       distances: { home: 0, park: 2, shop: 5, school: 5 },
       highlighting: [],
       pathEdges: [['home', 'park'], ['park', 'school']],
-      interactiveTarget: null,
+      interactiveAction: null,
       calculation: {
         title: "Final Summary",
         steps: [
@@ -471,33 +476,112 @@ export default function DijkstraEnhanced() {
       sounds.complete();
     }
 
-    // Interactive mode hints
-    if (interactiveMode && currentStep.interactiveTarget) {
+    // Interactive mode setup
+    if (interactiveMode && currentStep.interactiveAction) {
+      const action = currentStep.interactiveAction;
       setWaitingForClick(true);
-      setInteractiveHint(`Click on ${nodes[currentStep.interactiveTarget].name} to continue!`);
+      setInteractiveHint(action.hint);
+      setInteractiveTaskDescription(action.taskDescription);
+      
+      if (action.type === 'node') {
+        setPulsingTarget(action.target);
+        setPulsingEdge(null);
+        setShowCompleteButton(false);
+      } else if (action.type === 'edge') {
+        setPulsingTarget(null);
+        setPulsingEdge(action.target);
+        setShowCompleteButton(false);
+      } else if (action.type === 'button') {
+        setPulsingTarget(null);
+        setPulsingEdge(null);
+        setShowCompleteButton(true);
+      }
+    } else if (interactiveMode && !currentStep.interactiveAction) {
+      // Final step - no action needed
+      setWaitingForClick(false);
+      setInteractiveHint('You completed the algorithm!');
+      setInteractiveTaskDescription('');
+      setPulsingTarget(null);
+      setPulsingEdge(null);
+      setShowCompleteButton(false);
     } else {
       setWaitingForClick(false);
       setInteractiveHint('');
+      setInteractiveTaskDescription('');
+      setPulsingTarget(null);
+      setPulsingEdge(null);
+      setShowCompleteButton(false);
     }
-  }, [step, soundEnabled]);
+  }, [step, soundEnabled, interactiveMode]);
 
   const handleNodeClick = (nodeId) => {
     if (soundEnabled) sounds.click();
     
     if (interactiveMode && waitingForClick) {
       const currentStep = steps[step];
-      if (nodeId === currentStep.interactiveTarget) {
+      const action = currentStep.interactiveAction;
+      
+      if (action && action.type === 'node' && nodeId === action.target) {
         if (soundEnabled) sounds.correct();
+        setInteractiveScore(interactiveScore + 1);
         setWaitingForClick(false);
-        setInteractiveHint('');
-        if (step < steps.length - 1) {
-          setStep(step + 1);
-        }
-      } else {
+        setPulsingTarget(null);
+        setInteractiveHint('Correct!');
+        
+        setTimeout(() => {
+          if (step < steps.length - 1) {
+            setStep(step + 1);
+          }
+        }, 500);
+      } else if (action && action.type === 'node') {
         if (soundEnabled) sounds.wrong();
-        setInteractiveHint(`Not quite! Try clicking on ${nodes[currentStep.interactiveTarget].name}`);
+        setInteractiveHint(`Not quite! ${action.hint}`);
       }
     }
+  };
+
+  const handleEdgeClick = (from, to) => {
+    if (soundEnabled) sounds.click();
+    
+    if (interactiveMode && waitingForClick) {
+      const currentStep = steps[step];
+      const action = currentStep.interactiveAction;
+      
+      if (action && action.type === 'edge') {
+        const [targetFrom, targetTo] = action.target;
+        const isCorrect = (from === targetFrom && to === targetTo) || (from === targetTo && to === targetFrom);
+        
+        if (isCorrect) {
+          if (soundEnabled) sounds.correct();
+          setInteractiveScore(interactiveScore + 1);
+          setWaitingForClick(false);
+          setPulsingEdge(null);
+          setInteractiveHint('Correct!');
+          
+          setTimeout(() => {
+            if (step < steps.length - 1) {
+              setStep(step + 1);
+            }
+          }, 500);
+        } else {
+          if (soundEnabled) sounds.wrong();
+          setInteractiveHint(`Not that path! ${action.hint}`);
+        }
+      }
+    }
+  };
+
+  const handleCompleteClick = () => {
+    if (soundEnabled) sounds.correct();
+    setInteractiveScore(interactiveScore + 1);
+    setWaitingForClick(false);
+    setShowCompleteButton(false);
+    
+    setTimeout(() => {
+      if (step < steps.length - 1) {
+        setStep(step + 1);
+      }
+    }, 500);
   };
 
   const handleQuizAnswer = (answerIndex) => {
@@ -535,6 +619,10 @@ export default function DijkstraEnhanced() {
     setShowPathComparison(false);
     setWaitingForClick(false);
     setInteractiveHint('');
+    setInteractiveTaskDescription('');
+    setPulsingTarget(null);
+    setPulsingEdge(null);
+    setShowCompleteButton(false);
   };
 
   const togglePlay = () => {
@@ -552,6 +640,7 @@ export default function DijkstraEnhanced() {
   const startInteractiveMode = () => {
     reset();
     setInteractiveMode(true);
+    setInteractiveScore(0);
     setIsPlaying(false);
   };
 
@@ -1036,12 +1125,39 @@ export default function DijkstraEnhanced() {
           0%, 100% { filter: drop-shadow(0 0 8px #22c55e); }
           50% { filter: drop-shadow(0 0 16px #22c55e); }
         }
+        @keyframes targetPulse {
+          0%, 100% { 
+            transform: scale(1);
+            filter: drop-shadow(0 0 0px #8b5cf6);
+          }
+          50% { 
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 20px #8b5cf6);
+          }
+        }
+        @keyframes edgePulse {
+          0%, 100% { 
+            stroke-width: 6;
+            opacity: 1;
+          }
+          50% { 
+            stroke-width: 10;
+            opacity: 0.8;
+          }
+        }
+        @keyframes bounceArrow {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(5px); }
+        }
         .animating-node { animation: scaleUp 0.6s ease-in-out; }
         .pulse-ring { animation: pulseRing 0.6s ease-in-out; }
         .animated-edge { stroke-dasharray: 10 5; animation: dashMove 0.5s linear infinite; }
         .glow-edge { animation: glowPulse 1s ease-in-out infinite; }
         .clickable-node { cursor: pointer; transition: transform 0.2s; }
         .clickable-node:hover { transform: scale(1.1); }
+        .pulsing-target { animation: targetPulse 1s ease-in-out infinite; cursor: pointer; }
+        .pulsing-edge { animation: edgePulse 1s ease-in-out infinite; cursor: pointer; }
+        .bounce-arrow { animation: bounceArrow 0.8s ease-in-out infinite; }
       `}</style>
       
       <div className="bg-white rounded-3xl shadow-2xl p-4 md:p-8 max-w-4xl w-full my-8">
@@ -1098,9 +1214,43 @@ export default function DijkstraEnhanced() {
 
         {/* Interactive Mode Banner */}
         {interactiveMode && (
-          <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl p-4 mb-6 text-center">
-            <p className="font-bold text-lg mb-1">🎮 Interactive Mode Active!</p>
-            <p className="text-purple-100">{interactiveHint || "Follow along by clicking the correct nodes"}</p>
+          <div className="bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 rounded-full p-2">
+                  <Brain size={24} />
+                </div>
+                <div>
+                  <p className="font-bold text-lg">Interactive Mode</p>
+                  <p className="text-purple-100 text-sm">Score: {interactiveScore} / {steps.filter(s => s.interactiveAction).length}</p>
+                </div>
+              </div>
+              
+              <div className="flex-1 text-center">
+                {interactiveTaskDescription && (
+                  <div className="bg-white/20 rounded-lg px-4 py-2 inline-block">
+                    <p className="text-sm font-medium">Task: {interactiveTaskDescription}</p>
+                  </div>
+                )}
+              </div>
+              
+              <div className="text-right">
+                <p className="text-purple-100 flex items-center gap-2">
+                  <span className="bounce-arrow">👆</span> {interactiveHint}
+                </p>
+              </div>
+            </div>
+            
+            {showCompleteButton && (
+              <div className="mt-4 text-center">
+                <button
+                  onClick={handleCompleteClick}
+                  className="bg-white text-purple-600 px-8 py-3 rounded-full font-bold text-lg hover:bg-purple-100 transition-all animate-pulse"
+                >
+                  Complete
+                </button>
+              </div>
+            )}
           </div>
         )}
         
@@ -1138,6 +1288,10 @@ export default function DijkstraEnhanced() {
                 <stop offset="0%" style={{stopColor: '#fde047'}} />
                 <stop offset="100%" style={{stopColor: '#eab308'}} />
               </linearGradient>
+              <linearGradient id="purpleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style={{stopColor: '#c4b5fd'}} />
+                <stop offset="100%" style={{stopColor: '#8b5cf6'}} />
+              </linearGradient>
               <filter id="dropShadow" x="-50%" y="-50%" width="200%" height="200%">
                 <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
                 <feOffset dx="0" dy="2" result="offsetblur"/>
@@ -1166,21 +1320,52 @@ export default function DijkstraEnhanced() {
               const midY = (from.y + to.y) / 2 + 50;
               const edgeStyle = getEdgeStyle(edge.from, edge.to);
               
+              // Check if this edge is the pulsing target
+              const isPulsingEdge = pulsingEdge && 
+                ((edge.from === pulsingEdge[0] && edge.to === pulsingEdge[1]) ||
+                 (edge.from === pulsingEdge[1] && edge.to === pulsingEdge[0]));
+              
               return (
-                <g key={idx}>
+                <g 
+                  key={idx}
+                  onClick={() => handleEdgeClick(edge.from, edge.to)}
+                  style={{ cursor: interactiveMode && pulsingEdge ? 'pointer' : 'default' }}
+                >
+                  {/* Invisible wider line for easier clicking */}
                   <line
                     x1={from.x}
                     y1={from.y + 50}
                     x2={to.x}
                     y2={to.y + 50}
-                    className={`${edgeStyle.className} transition-all duration-500 ${edgeStyle.animated ? 'animated-edge' : ''} ${edgeStyle.glow ? 'glow-edge' : ''}`}
-                    strokeWidth={edgeStyle.width}
+                    stroke="transparent"
+                    strokeWidth="20"
+                  />
+                  <line
+                    x1={from.x}
+                    y1={from.y + 50}
+                    x2={to.x}
+                    y2={to.y + 50}
+                    className={`${edgeStyle.className} transition-all duration-500 ${edgeStyle.animated ? 'animated-edge' : ''} ${edgeStyle.glow ? 'glow-edge' : ''} ${isPulsingEdge ? 'pulsing-edge' : ''}`}
+                    strokeWidth={isPulsingEdge ? 8 : edgeStyle.width}
+                    stroke={isPulsingEdge ? '#8b5cf6' : undefined}
                     filter={edgeStyle.glow ? 'url(#glow)' : undefined}
                   />
+                  {isPulsingEdge && (
+                    <line
+                      x1={from.x}
+                      y1={from.y + 50}
+                      x2={to.x}
+                      y2={to.y + 50}
+                      stroke="#8b5cf6"
+                      strokeWidth="16"
+                      opacity="0.3"
+                      className="pulsing-edge"
+                    />
+                  )}
                   <text
                     x={midX}
                     y={midY - 10}
-                    className={`font-bold text-sm ${edgeStyle.className.includes('orange') ? 'fill-orange-600' : 'fill-gray-700'}`}
+                    className={`font-bold text-sm ${isPulsingEdge ? 'fill-purple-600' : edgeStyle.className.includes('orange') ? 'fill-orange-600' : 'fill-gray-700'}`}
                     textAnchor="middle"
                   >
                     {edge.label}
@@ -1195,11 +1380,12 @@ export default function DijkstraEnhanced() {
               const style = getNodeStyle(id);
               const nodeY = node.y + 50;
               const isClickable = interactiveMode && waitingForClick;
+              const isPulsingTarget = pulsingTarget === id;
               
               return (
                 <g 
                   key={id} 
-                  className={`${isAnimating ? 'animating-node' : ''} ${isClickable ? 'clickable-node' : ''}`}
+                  className={`${isAnimating ? 'animating-node' : ''} ${isClickable ? 'clickable-node' : ''} ${isPulsingTarget ? 'pulsing-target' : ''}`}
                   onClick={() => handleNodeClick(id)}
                   style={{ cursor: isClickable ? 'pointer' : 'default' }}
                 >
@@ -1210,13 +1396,21 @@ export default function DijkstraEnhanced() {
                     </>
                   )}
                   
+                  {/* Pulsing glow effect for interactive target */}
+                  {isPulsingTarget && (
+                    <>
+                      <circle cx={node.x} cy={nodeY} r="55" fill="none" stroke="#8b5cf6" strokeWidth="4" opacity="0.5" className="pulsing-edge" />
+                      <circle cx={node.x} cy={nodeY} r="60" fill="none" stroke="#8b5cf6" strokeWidth="2" opacity="0.3" className="pulsing-edge" />
+                    </>
+                  )}
+                  
                   <circle
                     cx={node.x}
                     cy={nodeY}
                     r="45"
-                    fill={style.fill}
-                    stroke={style.stroke}
-                    strokeWidth={style.strokeWidth}
+                    fill={isPulsingTarget ? 'url(#purpleGradient)' : style.fill}
+                    stroke={isPulsingTarget ? '#8b5cf6' : style.stroke}
+                    strokeWidth={isPulsingTarget ? 5 : style.strokeWidth}
                     filter="url(#dropShadow)"
                     className="transition-all duration-500"
                   />
@@ -1227,17 +1421,17 @@ export default function DijkstraEnhanced() {
                     {node.label.split(' ')[0]}
                   </text>
                   
-                  <rect x={node.x - 55} y={nodeY - 72} width="110" height="24" rx="12" fill={style.statusColor} opacity="0.9" />
+                  <rect x={node.x - 55} y={nodeY - 72} width="110" height="24" rx="12" fill={isPulsingTarget ? '#8b5cf6' : style.statusColor} opacity="0.9" />
                   <text x={node.x} y={nodeY - 54} className="fill-white font-bold pointer-events-none" style={{ fontSize: '11px' }} textAnchor="middle">
-                    {style.status}
+                    {isPulsingTarget ? 'Click me!' : style.status}
                   </text>
                   
-                  <rect x={node.x - 35} y={nodeY + 52} width="70" height="28" rx="14" fill="white" stroke={style.stroke} strokeWidth="2" />
+                  <rect x={node.x - 35} y={nodeY + 52} width="70" height="28" rx="14" fill="white" stroke={isPulsingTarget ? '#8b5cf6' : style.stroke} strokeWidth="2" />
                   <text
                     x={node.x}
                     y={nodeY + 70}
                     className="font-bold text-sm pointer-events-none"
-                    fill={style.statusColor}
+                    fill={isPulsingTarget ? '#8b5cf6' : style.statusColor}
                     textAnchor="middle"
                   >
                     {distances[id] !== undefined ? (distances[id] === '?' ? '?' : `${distances[id]} blocks`) : '∞'}
