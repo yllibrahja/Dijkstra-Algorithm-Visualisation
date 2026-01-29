@@ -3,33 +3,35 @@
 [![Live Demo](https://img.shields.io/badge/demo-live-green)](https://yllibrahja.github.io/Dijkstra-Algorithm-Visualisation/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
 
-An interactive, kid-friendly visualization of Dijkstra's shortest path algorithm. Learn how computers find the fastest route between two points.
+An interactive, beginner-friendly visualization of Dijkstra's shortest path algorithm. Learn how computers find the fastest route between two points.
 
 ## About
 
-This project provides an engaging, interactive way to learn Dijkstra's shortest path algorithm. Start at Home and find the shortest path to School by exploring multiple locations including Park, Shop, Hospital, Arcade, and Beach. The visualization guides you through 20+ steps with detailed explanations and interactive decision points.
+This project provides an engaging way to learn Dijkstra's shortest path algorithm. Navigate from Home to School through 7 different locations including Park, Shop, Hospital, Arcade, and Beach. The visualization guides you through 11 steps with explanations, decision points, and a priority queue display.
 
 ## Features
 
-**Learning Experience**
-- 20+ Guided Steps: Detailed walkthrough of the entire algorithm
-- Interactive Mode: Click nodes and edges to actively participate
-- Real-time Visualization: Watch distance updates and path exploration
-- Decision Points: Multiple-choice questions at key steps
-- Why This Matters: Explanations of real-world applications
+**Learning Tools**
+- Step-by-Step Walkthrough: 11 guided steps explaining the algorithm
+- Priority Queue Panel: See which nodes are waiting to be visited
+- Decision Panel: Understand why the algorithm makes each choice
+- "Why This Matters": Real-world context for each concept
+- Interactive Mode: Click nodes and edges to participate actively
+- Quiz Mode: 4 questions to test your understanding
 
-**User Controls**
-- Play/Pause/Reset: Control the visualization flow
-- Speed Control: Adjust animation speed (0.5x to 3x)
+**Visual Elements**
+- 7 Locations: Home, Park, Shop, Hospital, Arcade, Beach, School
+- 9 Weighted Edges: Multiple paths to compare
+- Color-Coded States: Current (indigo), Exploring (amber), Visited (indigo light), Final path (emerald)
+- Distance Badges: See calculated distances on each node
+- Responsive Layout: Two-column design on larger screens
+
+**Controls**
+- Play/Pause: Auto-advance through steps
+- Back/Next: Manual step navigation
+- Reset: Start over from the beginning
 - Sound Toggle: Enable/disable audio feedback
-- Quiz Mode: Test your understanding with interactive questions
-- Step Navigation: Move forward/backward through the algorithm
-
-**Visual Design**
-- Graph Visualization: 7 locations with weighted edges
-- Color-coded States: Unvisited (gray), exploring (blue), visited (green)
-- Node Identification: Clear markers for each location
-- Responsive Layout: Works on desktop and mobile devices
+- Interactive Toggle: Switch between watch and participate modes
 
 ## Live Demo
 
@@ -65,41 +67,41 @@ npm run build
 ```
 Dijkstra-Algorithm-Visualisation/
 ├── src/
-│   ├── DijkstraAlgorithm.jsx    # Main component with algorithm logic
+│   ├── DijkstraEnhanced.jsx     # Main visualization component
 │   ├── main.jsx                 # React entry point
-│   └── index.css                # Global styles
-├── index.html                   # HTML template
-├── package.json                 # Dependencies and scripts
-├── vite.config.js              # Vite configuration
-├── tailwind.config.js          # Tailwind CSS configuration
-├── postcss.config.js           # PostCSS configuration
-└── README.md                   # This file
+│   └── index.css                # Tailwind directives
+├── index.html
+├── package.json
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+└── README.md
 ```
 
 ## How Dijkstra's Algorithm Works
 
-The algorithm finds the shortest path from a source node to a destination by:
+1. **Initialize**: Start at Home with distance 0, all others unknown
+2. **Explore**: Check all neighbors and calculate their distances
+3. **Select**: Pick the unvisited node with the smallest distance
+4. **Mark**: Mark current node as visited
+5. **Repeat**: Continue until reaching the destination
+6. **Result**: The path found is guaranteed to be the shortest
 
-1. **Initialize**: Start at the source (Home) with distance 0, mark all others as infinite
-2. **Explore**: From current node, check all unvisited neighbors and update their distances
-3. **Select**: Choose the unvisited node with the smallest distance
-4. **Mark**: Mark that node as visited and repeat from step 2
-5. **Complete**: Continue until reaching the destination or visiting all nodes
-6. **Guaranteed**: The algorithm guarantees finding the true shortest path
+**Key Insight**: By always visiting the closest unvisited node, we ensure that when we reach any node, we've found the optimal path to it.
 
-### Real-World Applications
-- GPS Navigation: Finding fastest routes in maps
-- Game AI: Pathfinding for non-player characters
-- Network Routing: Optimizing data packet transmission
-- Flight Planning: Computing minimal travel routes
+## Real-World Applications
+
+- **GPS Navigation**: Finding the fastest driving route
+- **Game AI**: Pathfinding for characters in video games
+- **Network Routing**: Directing internet traffic efficiently
+- **Social Networks**: Finding degrees of separation between people
 
 ## Built With
 
-- **[React 18](https://react.dev/)** - User interface library
-- **[Vite 4](https://vitejs.dev/)** - Fast build tool and dev server
-- **[Tailwind CSS 3](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[Lucide React](https://lucide.dev/)** - Beautiful icon library
-- **[GitHub Pages](https://pages.github.com/)** - Deployment platform
+- [React 18](https://react.dev/) - UI library
+- [Vite 4](https://vitejs.dev/) - Build tool
+- [Tailwind CSS 3](https://tailwindcss.com/) - Styling
+- [Lucide React](https://lucide.dev/) - Icons
 
 ## License
 
